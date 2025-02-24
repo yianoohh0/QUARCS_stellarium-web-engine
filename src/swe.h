@@ -30,7 +30,7 @@
 #include "json-builder.h"
 #include "eph-file.h"
 #include "erfa_wrap.h"
-#include "log.h"
+#include "stellarium_log.h"
 #include "tests.h"
 
 #include "utils/cache.h"

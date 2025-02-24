@@ -443,3 +443,10 @@ Module.afterInit(function() {
   // Just so that we can use SweObj in pre.js.
   Module['SweObj'] = SweObj;
 })
+
+window.testHya = function() {
+  
+  console.log("Hello, World!===========================================");
+  // 调用 C 函数
+
+}

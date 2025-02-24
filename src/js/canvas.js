@@ -171,6 +171,8 @@ Module.afterInit(function() {
 
   // Kickoff rendering at max FPS, normally 60 FPS on a browser.
   window.requestAnimationFrame(render)
+
+
 });
 
 // 通过 window 对象暴露 setFrameRate 函数，使其成为全局变量
@@ -180,4 +182,227 @@ window.setHighFrameRate = function(newFrameRate) {
 
 window.getHighFrameRate = function() {
   return highframeRate;
+}
+
+
+window.solve_field = function() {
+
+
+    // 构造参数
+    const args = [
+        "solve_field",               // 程序名称
+        "--fits-image", "/home/hya/a.fits",   // 第一个参数及其值
+        "--overwrite",               // 第二个参数
+        "--scale-units", "degwidth", // 第三个参数及其值
+        "--radius", "10",           // 第四个参数及其值
+        "--nsigma", "12",           // 第五个参数及其值
+        "--no-plots",               // 第六个参数
+        "--no-remove-lines",        // 第七个参数
+        "--uniformize", "0",        // 第八个参数及其值
+        "--timestamp",                // 第九个参数
+        "-v",              
+    ];
+
+    // 计算参数数量
+    const argc = args.length;
+
+    // 分配内存以存储指向字符串的指针
+    const argv = Module._malloc(argc * 4); // 每个指针占用 4 字节
+    const stringPointers = new Array(argc);
+
+    // 为每个字符串分配内存并存储指针
+    for (let i = 0; i < argc; i++) {
+        const str = args[i];
+        const strLength = Module.lengthBytesUTF8(str) + 1; // +1 用于 null-terminated 字符串
+        const strPtr = Module._malloc(strLength);
+        Module.stringToUTF8(str, strPtr, strLength); // 将字符串写入内存
+        stringPointers[i] = strPtr; // 存储指针
+        // 将每个字符串指针存储到 argv 中
+        Module.HEAP32[(argv >> 2) + i] = strPtr; // 使用 HEAP32 直接操作内存
+    }
+
+    // 调用 C 函数
+    Module._run_solve_field(argc, argv);
+
+    // 释放分配的内存
+    for (let i = 0; i < argc; i++) {
+        Module._free(stringPointers[i]); // 释放每个字符串的内存
+    }
+    Module._free(argv); // 释放指向字符串指针的内存
+
+    console.log("Module._run_solve_field is called successfully.");
+  
+
+
+};
+
+// window.solve_field = function(file) {
+
+
+//   const args = [
+//       "solve_field",               // 程序名称
+//       "--fits-image", "/home/hya/a.fits",   // 第一个参数及其值
+//       "--overwrite",               // 第二个参数
+//       "--scale-units", "degwidth", // 第三个参数及其值
+//       "--radius", "10",           // 第四个参数及其值
+//       "--nsigma", "12",           // 第五个参数及其值
+//       "--no-plots",               // 第六个参数
+//       "--no-remove-lines",        // 第七个参数
+//       "--uniformize", "0",        // 第八个参数及其值
+//       "--timestamp",                // 第九个参数
+//       "-v",              
+//   ];
+
+//   // 计算参数数量
+//   const argc = args.length;
+
+//   // 分配内存以存储指向字符串的指针
+//   const argv = Module._malloc(argc * 4); // 每个指针占用 4 字节
+//   const stringPointers = new Array(argc);
+
+//   // 为每个字符串分配内存并存储指针
+//   for (let i = 0; i < argc; i++) {
+//       const str = args[i];
+//       const strLength = Module.lengthBytesUTF8(str) + 1; // +1 用于 null-terminated 字符串
+//       const strPtr = Module._malloc(strLength);
+//       Module.stringToUTF8(str, strPtr, strLength); // 将字符串写入内存
+//       stringPointers[i] = strPtr; // 存储指针
+//       // 将每个字符串指针存储到 argv 中
+//       Module.HEAP32[(argv >> 2) + i] = strPtr; // 使用 HEAP32 直接操作内存
+//   }
+
+//   // // 打印 argv 内容以调试
+//   // for (let i = 0; i < argc; i++) {
+//   //     const argString = Module.UTF8ToString(stringPointers[i]);
+//   //     console.log(`argv[${i}]: ${argString}`);
+//   // }
+
+//   // 调用 C 函数
+//   Module._run_solve_field(argc, argv);
+
+//   // 释放分配的内存
+//   for (let i = 0; i < argc; i++) {
+//       Module._free(stringPointers[i]); // 释放每个字符串的内存
+//   }
+//   Module._free(argv); // 释放指向字符串指针的内存
+
+//   console.log("Module._run_solve_field is called successfully.");
+// };
+
+window.sendfile = function(fileContent){
+  // 打印 fileContent 的内容
+  console.log("File content:", fileContent);
+
+  // 打印 fileContent 的字符串表示（如果是文本文件）
+  const stringData = new TextDecoder("utf-8").decode(fileContent);
+  console.log("Decoded file content as string:", stringData);
+
+  // 如果需要将数据传递给 C 函数，您可以使用 Module._malloc 分配内存
+  const filePtr = Module._malloc(fileContent.length);
+  Module.HEAPU8.set(fileContent, filePtr);
+
+  // 调用 C 函数处理文件
+  Module._process_file(filePtr, fileContent.length);
+
+  // 释放分配的内存
+  Module._free(filePtr);
+}
+
+window.sendindexfile = function(fileContent, fileName) {
+  // 打印 fileContent 的内容
+  console.log("INDEX File content:", fileContent);
+  console.log("INDEX File fileName:", fileName);
+
+  // 如果需要将数据传递给 C 函数，您可以使用 Module._malloc 分配内存
+  const filePtr = Module._malloc(fileContent.length);
+  Module.HEAPU8.set(fileContent, filePtr);
+
+  // 分配内存以存储文件名
+  const namePtr = Module._malloc(fileName.length + 1); // +1 for null terminator
+  Module.stringToUTF8(fileName, namePtr, fileName.length + 1); // 将字符串复制到 WebAssembly 内存
+
+  // 调用 C 函数处理文件
+  Module._process_index_file(filePtr, fileContent.length, namePtr);
+
+  // 释放分配的内存
+  Module._free(filePtr);
+}
+
+
+window.sendconfigfile = function(fileContent){
+  // 打印 fileContent 的内容
+  console.log("File content:", fileContent);
+
+  // 打印 fileContent 的字符串表示（如果是文本文件）
+  const stringData = new TextDecoder("utf-8").decode(fileContent);
+  console.log("Decoded config file content as string:", stringData);
+
+  // 如果需要将数据传递给 C 函数，您可以使用 Module._malloc 分配内存
+  const filePtr = Module._malloc(fileContent.length);
+  Module.HEAPU8.set(fileContent, filePtr);
+
+  // 调用 C 函数处理文件
+  Module._process_config_file(filePtr, fileContent.length);
+
+  // 释放分配的内存
+  Module._free(filePtr);
+}
+
+window.teststring = function(dataPtr, dataSize) {
+  // 从 WebAssembly 内存中读取二进制数据
+  const binaryData = new Uint8Array(Module.HEAPU8.buffer, dataPtr, dataSize);
+
+  // 打印传入的二进制数据
+  console.log("Received binary data:", binaryData);
+
+  // 如果需要，可以将二进制数据转换为字符串并打印
+  const stringData = new TextDecoder().decode(binaryData);
+  console.log("Decoded string from binary data:", stringData);
+}
+
+window.callCoreTest = function() {
+  if (typeof Module._core_test2 === 'function') {
+      // 定义字符串数组
+      const strings = [
+          "aaabbb",
+          "bbbccc",
+      ];
+      console.log("Strings array:", strings);
+
+      // 分配内存以存储指向字符串的指针
+      const numStrings = strings.length;
+      const stringPointers = new Array(numStrings);
+
+      // 为每个字符串分配内存并存储指针
+      for (let i = 0; i < numStrings; i++) {
+          const str = strings[i];
+          const strLength = Module.lengthBytesUTF8(str) + 1; // +1 用于 null-terminated 字符串
+          const strPtr = Module._malloc(strLength);
+          Module.stringToUTF8(str, strPtr, strLength); // 将字符串写入内存
+          stringPointers[i] = strPtr; // 存储指针
+      }
+
+      // 分配内存以存储指向字符串指针的指针
+      const pointersPtr = Module._malloc(numStrings * 4); // 每个指针占用 4 字节
+
+      // 将每个字符串指针存储到指针数组中
+      for (let i = 0; i < numStrings; i++) {
+          // 使用 HEAP32 直接操作内存
+          Module.HEAP32[(pointersPtr >> 2) + i] = stringPointers[i]; // 将每个字符串指针存储到指针数组中
+      }
+
+
+      // 调用 C 函数
+      Module._core_test2(numStrings, pointersPtr);
+
+      // 释放分配的内存
+      for (let i = 0; i < numStrings; i++) {
+          Module._free(stringPointers[i]); // 释放每个字符串的内存
+      }
+      Module._free(pointersPtr); // 释放指针数组的内存
+
+      console.log("Module._core_test2 is called successfully.");
+  } else {
+      console.error("Module._core_test2 is not a function");
+  }
 }

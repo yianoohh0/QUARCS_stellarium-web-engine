@@ -54,7 +54,7 @@ int healpix_vec2pix(int nside, const double vec[3]);
  * of pix.  If a neighbor does not exist (this can only be the case
  * for the W, N, E and S neighbors), its entry is set to -1.
  */
-void healpix_get_neighbours(int nside, int pix, int out[8]);
+//void healpix_get_neighbours(int nside, int pix, int out[8]);
 
 /*
  * Function: healpix_get_boundaries
