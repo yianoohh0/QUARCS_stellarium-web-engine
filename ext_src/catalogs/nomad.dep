@@ -1,0 +1,4 @@
+nomad.o: nomad.c ../include/astrometry/nomad.h \
+ ../include/astrometry/starutil.h ../include/astrometry/an-bool.h \
+ ../include/astrometry/keywords.h ../include/astrometry/an-endian.h \
+ ../include/astrometry/starutil.h

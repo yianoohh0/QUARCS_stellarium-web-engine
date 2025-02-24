@@ -1,0 +1,4 @@
+constellations.o: constellations.c ../include/astrometry/constellations.h \
+ ../include/astrometry/bl.h ../include/astrometry/keywords.h \
+ ../include/astrometry/bl-nl.h ../include/astrometry/bl-nl.ph \
+ stellarium-constellations.c

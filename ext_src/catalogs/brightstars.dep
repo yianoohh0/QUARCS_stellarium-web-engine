@@ -1,0 +1,2 @@
+brightstars.o: brightstars.c ../include/astrometry/brightstars.h \
+ brightstars-data.c

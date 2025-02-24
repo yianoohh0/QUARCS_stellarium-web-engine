@@ -1,0 +1,4 @@
+2mass.o: 2mass.c ../include/astrometry/os-features.h \
+ ../include/astrometry/os-features-config.h ../include/astrometry/2mass.h \
+ ../include/astrometry/an-bool.h ../include/astrometry/starutil.h \
+ ../include/astrometry/keywords.h

@@ -64,7 +64,7 @@ extern "C" {
 #endif
 
 // Define the LOG macros, so that they get available in the utils files.
-#include "stellarium_log.h"
+#include "log.h"
 
 #ifdef __cplusplus
 }

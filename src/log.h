@@ -10,6 +10,7 @@
 #ifndef LOG_H
 #define LOG_H
 
+#include "../ext_src/astrometry/log.h"
 /*
  * Define all the LOG_X macros
  */

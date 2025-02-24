@@ -1,0 +1,7 @@
+constellation-boundaries.o: constellation-boundaries.c \
+ ../include/astrometry/constellation-boundaries.h \
+ ../include/astrometry/an-bool.h ../include/astrometry/bl.h \
+ ../include/astrometry/keywords.h ../include/astrometry/bl-nl.h \
+ ../include/astrometry/bl-nl.ph ../include/astrometry/starutil.h \
+ ../include/astrometry/an-bool.h ../include/astrometry/mathutil.h \
+ ../include/astrometry/bl.h constellation-boundaries-data.c

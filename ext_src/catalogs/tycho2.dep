@@ -1,0 +1,3 @@
+tycho2.o: tycho2.c ../include/astrometry/tycho2.h \
+ ../include/astrometry/an-bool.h ../include/astrometry/starutil.h \
+ ../include/astrometry/keywords.h

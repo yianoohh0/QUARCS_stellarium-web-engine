@@ -1,0 +1,3 @@
+ucac3.o: ucac3.c ../include/astrometry/ucac3.h \
+ ../include/astrometry/an-endian.h ../include/astrometry/starutil.h \
+ ../include/astrometry/an-bool.h ../include/astrometry/keywords.h

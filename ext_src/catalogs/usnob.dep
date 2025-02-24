@@ -1,0 +1,3 @@
+usnob.o: usnob.c ../include/astrometry/usnob.h \
+ ../include/astrometry/an-bool.h ../include/astrometry/starutil.h \
+ ../include/astrometry/keywords.h ../include/astrometry/an-endian.h

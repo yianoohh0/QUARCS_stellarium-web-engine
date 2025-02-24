@@ -1,0 +1,5 @@
+openngc.o: openngc.c ../include/astrometry/openngc.h \
+ ../include/astrometry/bl.h ../include/astrometry/keywords.h \
+ ../include/astrometry/bl-nl.h ../include/astrometry/bl-nl.ph \
+ ../include/astrometry/bl.h ../include/astrometry/ioutils.h \
+ ../include/astrometry/an-bool.h openngc-names.c openngc-entries.c
