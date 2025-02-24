@@ -2,7 +2,8 @@ import glob
 import os
 import sys
 
-#this is github test
+#aaa
+
 vars = Variables()
 vars.AddVariables(
     EnumVariable('mode', 'Build mode', 'debug',

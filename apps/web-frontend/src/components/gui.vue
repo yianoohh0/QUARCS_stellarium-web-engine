@@ -13,8 +13,6 @@
   <div v-show="showPHD2BoxAndCross && PHD2CrossView" :class="SwitchPHD2CrossClass" :style="{ top: 0 + 'px', left: PHD2Cross_X + 'px', width: 1 + 'px', height: PHD2Cross_Height + 'px' }"></div>
   <div v-show="showPHD2BoxAndCross && PHD2CrossView" :class="SwitchPHD2CrossClass" :style="{ top: PHD2Cross_Y + 'px', left: 0 + 'px', width: PHD2Cross_Width + 'px', height: 1 + 'px' }"></div>
 
-  <div v-show="showPHD2BoxAndCross && PHD2CrossView" class="PHD2CircleClass" v-for="(Star, index) in PHD2MultiStars" :key="index" :style="{ top: Star.Y + 'px', left: Star.X + 'px' }"></div>
-
   <message-box v-for="(msg, index) in messageList" :key="msg.id" :message="msg.message" :type="msg.type" :Pos="msg.Pos" @close="removeMessage(index)"></message-box>
   
   <div>
@@ -78,6 +76,15 @@
     </transition>
     <mount-control-panel v-show="showFloatingBox" style="position: absolute; top: 50px; right: 10px; " class="get-click"></mount-control-panel>
   </div>
+  
+
+  <!-- 设备设置窗口组件 -->
+  <MountSettingWindow ref="mountDialog"></MountSettingWindow>
+  <PoleCameraSettingWindow ref="polecameraDialog"></PoleCameraSettingWindow>
+  <MainCameraSettingWindow ref="maincameraDialog"></MainCameraSettingWindow>
+  <GuiderSettingWindow ref="guiderDialog"></GuiderSettingWindow>
+  <FocuserSettingWindow ref="focuserDialog"></FocuserSettingWindow>
+  <CFWSettingWindow ref="cfwDialog"></CFWSettingWindow>
 
   <progress-bars style="position: absolute; bottom: 54px; right: 12px;"></progress-bars>
 
@@ -86,6 +93,16 @@
       <bottom-bar v-show="isBottomBarShow" :style="{ width: isPolarAxisMode ? '75%' : '100%' }" style="position:absolute; justify-content: center; bottom: 0; display:flex; margin-bottom: 0px" class="get-click"></bottom-bar>
     </transition>
   </div>
+
+  <!-- <div v-show="isExpTimeBarShow" class="exp-time-btn-bar-container">
+    <exp-time-btn-bar @time-selected="handleExpTimeSelected" class="get-click"></exp-time-btn-bar>
+  </div>
+
+  <div v-show="isCFWSelectBarShow" class="cfw-select-btn-bar-container">
+    <CFWSelectBtnBar @cfw-selected="handleCFWSelected" class="get-click"/>
+  </div>
+
+  <button v-if="isCaptureMode" @click="Switch_ExpTime_CFW" class="get-click btn-ExpTime-CFW-Switch">Switch ExpTime CFW</button> -->
 
   <transition name="BottomBtn">
   <button v-show="isMainSwitchShow" @click="SwitchMainPage" class="get-click btn-MainPageSwitch">
@@ -106,6 +123,10 @@
     </span>
   </button>
   </transition>
+
+  <!-- <div v-show="isCaptureMode">
+    <CircularProgressButton ref="CaptureBtn" class="get-click btn-Capture" />
+  </div> -->
 
   <ChartComponent v-show="showChartsPanel" class="get-click"/>
   <transition name="BottomBtn">
@@ -195,14 +216,8 @@
   </button>
 
   <transition name="ToolBar">
-    <div v-show="isCaptureMode" class="TopLeft-Info">
+    <div v-show="isCaptureMode" class="Image-Info">
       <p>{{ ImageInfo }}</p>
-    </div>
-  </transition>
-
-  <transition name="ToolBar">
-    <div v-show="isStellariumMode" class="TopLeft-Info">
-      <p>{{ PositionInfo }}</p>
     </div>
   </transition>
 
@@ -211,8 +226,6 @@
       <img src="@/assets/images/svg/ui/WhiteBalance.svg" height="20px" style="min-height: 20px"></img>
     </div>
   </button> -->
-
-  <DateTimePicker v-show="ShowDateTimePicker" v-model="pickerDate" :location="$store.state.currentLocation"></DateTimePicker>
 
   <ImageManagerPanel v-show="ShowImageManagerPanel" />
 
@@ -230,10 +243,10 @@
     <v-expand-x-transition>
     <v-card class="flashing-border" style="backdrop-filter: blur(5px); background-color: rgba(64, 64, 64, 0.5);">
       <v-card-title style="font-size: 20px;">
-        {{ $t(ConfirmDialogTitle) }}
+        {{ ConfirmDialogTitle }}
       </v-card-title>
       <v-card-text style="font-size: 15px; margin-bottom: -20px; line-height: 1.5;">
-        {{ $t(ConfirmDialogText) }}
+        {{ ConfirmDialogText }}
       </v-card-text>
       <v-card-actions style="margin-top: -20px; padding-top: -20px;">
         <v-spacer></v-spacer>
@@ -296,7 +309,7 @@
       </v-progress-circular>
     </div>
     <span style="position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); font-size: 10px; color: rgba(255, 255, 255, 0.3); user-select: none; text-align: center; width: 100%;"> 
-      {{ $t('Image loading in progress...') }} 
+      Image loading in progress...
     </span>
   </div>
   
@@ -318,6 +331,12 @@ import LocationDialog from '@/components/location-dialog.vue'
 import ObservingPanel from '@/components/observing-panel.vue'
 
 import MountControlPanel from '@/components/MountControlPanel.vue'
+import MountSettingWindow from '@/components/Settings-Dialog-Mount.vue'
+import PoleCameraSettingWindow from '@/components/Settings-Dialog-PoleCamera.vue'
+import MainCameraSettingWindow from '@/components/Settings-Dialog-MainCamera.vue'
+import GuiderSettingWindow from '@/components/Settings-Dialog-Guider.vue'
+import FocuserSettingWindow from '@/components/Settings-Dialog-Focuser.vue'
+import CFWSettingWindow from '@/components/Settings-Dialog-CFW.vue'
 
 import MessageBox from "@/components/MessageBox.vue";
 
@@ -347,9 +366,6 @@ import INDIDebugDialog from '@/components/indiDebugDialog.vue';
 
 import RPIHotspotDialog from '@/components/RPI-Hotspot.vue';
 
-import DateTimePicker from '@/components/date-time-picker.vue'
-import Moment from 'moment'
-
 export default {
   data: function () {
     return {
@@ -373,7 +389,6 @@ export default {
       ShowDeviceAllocationPanel: false,
       ShowINDIDebugDialog: false,
       ShowRPIHotspotDialog: false,
-      ShowDateTimePicker: false,
       loadingOriginalImage: false,
 
       currentImageWidth: 0,
@@ -444,8 +459,6 @@ export default {
       PHD2Cross_Width: 0,
       PHD2Cross_Height: 0,
 
-      PHD2MultiStars: [],
-
       CurrentGuiderStatus: 'null',
 
       PHD2BoxView: true,
@@ -463,8 +476,6 @@ export default {
       ],
 
       BinningNum: 1,
-      PositionInfo: '',
-
     }
   },
   created() {
@@ -485,7 +496,7 @@ export default {
     this.$bus.$on('toggleDeviceAllocationPanel', this.toggleDeviceAllocationPanel);
     this.$bus.$on('toggleINDIDebugDialog', this.toggleINDIDebugDialog);
     this.$bus.$on('toggleRPIHotspotDialog', this.toggleRPIHotspotDialog);
-    this.$bus.$on('toggleDateTimePicker', this.toggleDateTimePicker);
+    
     // this.$bus.$on('RedBoxClick', this.handleTouchOrMouseDown);
     this.$bus.$on('RedBox_XY', this.RedBox_XY);
     this.$bus.$on('RedBoxOffset', this.setRedBoxOffset);
@@ -500,8 +511,6 @@ export default {
     this.$bus.$on('CameraInExposuring',this.SwitchMainPage);
     this.$bus.$on('ShowCaptureImageProgress', this.ShowCaptureImageProgress);
     this.$bus.$on('PHD2BoxPosition', this.PHD2BoxPosition);
-    this.$bus.$on('ClearPHD2MultiStars', this.ClearPHD2MultiStars);
-    this.$bus.$on('PHD2MultiStarsPosition', this.PHD2MultiStarsPosition);
     this.$bus.$on('PHD2CrossPosition', this.PHD2CrossPosition);
     this.$bus.$on('GuiderStatus', this.GuiderStatus);
     this.$bus.$on('PHD2StarBoxView', this.togglePHD2StarBox);
@@ -512,7 +521,6 @@ export default {
     this.$bus.$on('FocalLength', this.FocalLengthSet);
     // this.$bus.$on('SetBinningNum', this.SetBinningNum);
     this.$bus.$on('ShowDSLRsSetup', this.ShowDSLRsSetup);
-    this.$bus.$on('ShowPositionInfo', this.ShowPositionInfo);
   },
   mounted() {
     // this.resizeRedBox(1920, 1080);
@@ -574,10 +582,6 @@ export default {
 
     toggleRPIHotspotDialog() {
       this.ShowRPIHotspotDialog = !this.ShowRPIHotspotDialog;
-    },
-
-    toggleDateTimePicker() {
-      this.ShowDateTimePicker = !this.ShowDateTimePicker;
     },
 
     showCaptureUI() {
@@ -653,14 +657,6 @@ export default {
       this.PHD2Cross_Height = window.innerHeight;
     },
 
-    PHD2MultiStarsPosition(StarStartX, StarStartY) {
-      this.PHD2MultiStars.push({ X: StarStartX, Y: StarStartY});
-    },
-
-    ClearPHD2MultiStars() {
-      this.PHD2MultiStars = [];
-    },
-
     GuiderStatus(status) {
       if(status === 'InGuiding') {
         this.CurrentGuiderStatus = 'InGuiding';
@@ -734,36 +730,36 @@ export default {
       this.$bus.$emit('AppSendMessage', 'Vue_Command', 'RedBoxSizeChange:'+ this.BoxSideLength);
     },
 
-    // handleAddDriver(driver) {
-    //   if (driver.type === 'Mount') {
-    //     this.$refs.mountDialog.AddDrivers(driver);
-    //   } else if (driver.type === 'Focuser') {
-    //     this.$refs.focuserDialog.AddDrivers(driver);
-    //   } else if (driver.type === 'PoleCamera') {
-    //     this.$refs.polecameraDialog.AddDrivers(driver);
-    //   } else if (driver.type === 'MainCamera') {
-    //     this.$refs.maincameraDialog.AddDrivers(driver);
-    //   } else if (driver.type === 'Guider') {
-    //     this.$refs.guiderDialog.AddDrivers(driver);
-    //   } else if (driver.type === 'CFW') {
-    //     this.$refs.cfwDialog.AddDrivers(driver);
-    //   }
-    // },
-    // handleAddDevice(device) {
-    //   if (device.type === 'Mount') {
-    //     this.$refs.mountDialog.AddDevices(device);
-    //   } else if (device.type === 'Focuser') {
-    //     this.$refs.focuserDialog.AddDevices(device);
-    //   } else if (device.type === 'PoleCamera') {
-    //     this.$refs.polecameraDialog.AddDevices(device);
-    //   } else if (device.type === 'MainCamera') {
-    //     this.$refs.maincameraDialog.AddDevices(device);
-    //   } else if (device.type === 'Guider') {
-    //     this.$refs.guiderDialog.AddDevices(device);
-    //   } else if (device.type === 'CFW') {
-    //     this.$refs.cfwDialog.AddDevices(device);
-    //   }
-    // },
+    handleAddDriver(driver) {
+      if (driver.type === 'Mount') {
+        this.$refs.mountDialog.AddDrivers(driver);
+      } else if (driver.type === 'Focuser') {
+        this.$refs.focuserDialog.AddDrivers(driver);
+      } else if (driver.type === 'PoleCamera') {
+        this.$refs.polecameraDialog.AddDrivers(driver);
+      } else if (driver.type === 'MainCamera') {
+        this.$refs.maincameraDialog.AddDrivers(driver);
+      } else if (driver.type === 'Guider') {
+        this.$refs.guiderDialog.AddDrivers(driver);
+      } else if (driver.type === 'CFW') {
+        this.$refs.cfwDialog.AddDrivers(driver);
+      }
+    },
+    handleAddDevice(device) {
+      if (device.type === 'Mount') {
+        this.$refs.mountDialog.AddDevices(device);
+      } else if (device.type === 'Focuser') {
+        this.$refs.focuserDialog.AddDevices(device);
+      } else if (device.type === 'PoleCamera') {
+        this.$refs.polecameraDialog.AddDevices(device);
+      } else if (device.type === 'MainCamera') {
+        this.$refs.maincameraDialog.AddDevices(device);
+      } else if (device.type === 'Guider') {
+        this.$refs.guiderDialog.AddDevices(device);
+      } else if (device.type === 'CFW') {
+        this.$refs.cfwDialog.AddDevices(device);
+      }
+    },
 
     // 消息框
     showMessageBox(msg,type) {
@@ -902,7 +898,7 @@ export default {
 
       if(this.loadingImageSolve) {
         this.$bus.$emit('showMsgBox', 'Image solve is currently in progress.', 'warning');
-        this.ShowConfirmDialog('Confirm', 'Are you sure you want to cancel the shooting and analysis?', 'EndCaptureAndSolve');
+        this.ShowConfirmDialog('Confirm', 'Are you sure you want to cancel capture and solve?', 'EndCaptureAndSolve');
       } else {
         this.loadingImageSolve = true;
         this.$bus.$emit('AppSendMessage', 'Vue_Command', 'SolveImage:' + this.FocalLength);
@@ -1022,10 +1018,6 @@ export default {
         this.$bus.$emit('AppSendMessage', 'Vue_Command', 'EndCaptureAndSolve');
         this.$bus.$emit('SendConsoleLogMsg', 'End Capture And Solve', 'info');
         this.loadingImageSolve = false;
-      } else if(this.ConfirmToDo === 'RestartRaspberryPi') {
-        this.$bus.$emit('AppSendMessage', 'Vue_Command', 'RestartRaspberryPi');
-      } else if(this.ConfirmToDo === 'ShutdownRaspberryPi') {
-        this.$bus.$emit('AppSendMessage', 'Vue_Command', 'ShutdownRaspberryPi');
       }
     },
 
@@ -1083,18 +1075,6 @@ export default {
 
     switchPolarAxisTips() {
       this.currentPolarAxisStep = Math.min(this.currentPolarAxisStep + 1, 4);
-    },
-
-    getLocalTime: function () {
-      var d = new Date()
-      d.setMJD(this.$store.state.stel.observer.utc)
-      const m = Moment(d)
-      m.local()
-      return m
-    },
-
-    ShowPositionInfo(lat, lng) {
-      this.PositionInfo = 'Lat & Long: ' + lat + ', ' + lng;
     },
 
     // calcWhiteBalanceGains() {
@@ -1171,20 +1151,6 @@ export default {
     
       return imageInfo;
     },
-    pickerDate: {
-      get: function () {
-        const t = this.getLocalTime()
-        t.milliseconds(0)
-        return t.format()
-      },
-      set: function (v) {
-        const m = Moment(v)
-        m.local()
-        m.milliseconds(this.getLocalTime().milliseconds())
-        this.$stel.core.observer.utc = m.toDate().getMJD()
-      }
-    },
-
   },
   components: { 
     Toolbar, 
@@ -1197,6 +1163,12 @@ export default {
     ProgressBars, 
     ObservingPanel, 
     MountControlPanel, 
+    MountSettingWindow, 
+    PoleCameraSettingWindow, 
+    MainCameraSettingWindow,
+    GuiderSettingWindow,
+    FocuserSettingWindow,
+    CFWSettingWindow,
     MessageBox,
     ExpTimeBtnBar,
     CFWSelectBtnBar,
@@ -1212,7 +1184,6 @@ export default {
     DeviceAllocationPanel,
     INDIDebugDialog,
     RPIHotspotDialog,
-    DateTimePicker,
   }
 }
 </script>
@@ -1350,7 +1321,7 @@ export default {
   border-radius: 50%;
 }
 
-.TopLeft-Info {
+.Image-Info {
   position:absolute;
   height: 10px;
   top: 40px;
@@ -1361,6 +1332,7 @@ export default {
   color: rgba(255, 255, 255, 0.5); 
   
   user-select: none;
+  /* backdrop-filter: blur(5px); */
   background-color: rgba(64, 64, 64, 0);
   border-radius: 3px;
 }
@@ -1663,18 +1635,6 @@ export default {
 .cross-null {
   position: absolute;
   background-color:  rgba(255, 165, 0, 1);
-}
-
-.PHD2CircleClass {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-
-  border-radius: 6px;
-
-  background-color: transparent;
-  box-sizing: border-box;
-  outline: 1px solid rgba(51, 218, 121, 1);
 }
 
 .PolarAxisTips {

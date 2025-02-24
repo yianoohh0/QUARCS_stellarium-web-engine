@@ -199,6 +199,7 @@ export default {
     },
     CaptureImageSave() {
       this.$bus.$emit('AppSendMessage', 'Vue_Command', 'CaptureImageSave');
+      // this.$bus.$emit('mainCanvasZoom');
     },
 
     CurrentExpTimeList() {

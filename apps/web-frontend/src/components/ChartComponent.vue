@@ -78,8 +78,6 @@ export default {
       isLongPress: false, // 标记是否为长按
       canClick: true,
 
-      GuiderConnect: false,
-
     };
   },
   components: {
@@ -90,7 +88,6 @@ export default {
     this.$bus.$on('GuiderSwitchStatus', this.GuiderSwitchStatus);
     this.$bus.$on('GuiderLoopExpStatus', this.GuiderLoopExpStatus);
     this.$bus.$on('GuiderStatus', this.GuiderStatus);
-    this.$bus.$on('GuiderConnected', this.GuiderConnected);
   },
   mounted() {
     this.updatePosition(); // 初始化位置
@@ -178,11 +175,7 @@ export default {
     },
 
     LoopExpSwitch() {
-      if (this.GuiderConnect) {
-        this.$bus.$emit('AppSendMessage', 'Vue_Command', 'GuiderLoopExpSwitch');
-      } else {
-        this.$bus.$emit('showMsgBox', 'Please connect the Guider camera first.', 'error');
-      }
+      this.$bus.$emit('AppSendMessage', 'Vue_Command', 'GuiderLoopExpSwitch');
     },
 
     ExpTimeSwitch() {
@@ -236,14 +229,6 @@ export default {
     },
     RangeSwitch() {
       this.$bus.$emit('ChartRangeSwitch');
-    },
-    GuiderConnected(num) {
-      if(num === 0){
-        this.GuiderConnect = false;
-      } else {
-        this.GuiderConnect = true;
-      }
-      console.log('Guider is Connected: ', num);
     },
   }
 }

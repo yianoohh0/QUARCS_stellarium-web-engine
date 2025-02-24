@@ -68,7 +68,6 @@
             </div>
 
             <v-select v-if="item.inputType === 'select'" v-model="item.value" :label="item.label" :items="item.selectValue" style="width: 150px; display: inline-block;"></v-select>
-            <v-switch v-if="item.inputType === 'switch'" v-model="item.value" :label="item.label" style="width: 170px; display: inline-block; margin-bottom: -35px; margin-top: -35px;"></v-switch>
           </v-card-text>
         </div>
 
@@ -125,18 +124,18 @@
 
           <v-divider :style="{ marginBottom: '10px' }"></v-divider>
 
-          <v-list-item @click.stop="RestartRaspberryPi()" :style="{ height: '36px', marginBottom: '10px' }">
+          <v-list-item @click.stop="Reboot()" :style="{ height: '36px', marginBottom: '10px' }">
             <v-list-item-icon style="margin-right: 10px;">
               <div style="display: flex; justify-content: center; align-items: center;">
                 <img src="@/assets/images/svg/ui/Reboot.svg" height="30px" style="min-height: 30px; pointer-events: none;"></img>
               </div>
             </v-list-item-icon>
             <v-list-item-content>
-              <v-list-item-title :style="{ height: '15px', padding: '1px', fontSize: '10px' }">{{ $t('Restart') }}</v-list-item-title>
+              <v-list-item-title :style="{ height: '15px', padding: '1px', fontSize: '10px' }">{{ $t('Reboot') }}</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
 
-          <v-list-item @click.stop="ShutdownRaspberryPi()" :style="{ height: '36px', marginBottom: '10px' }">
+          <v-list-item @click.stop="PowerOFF()" :style="{ height: '36px', marginBottom: '10px' }">
             <v-list-item-icon style="margin-right: 10px;">
               <div style="display: flex; justify-content: center; align-items: center;">
                 <img src="@/assets/images/svg/ui/PowerOFF.svg" height="30px" style="min-height: 30px; pointer-events: none;"></img>
@@ -304,14 +303,13 @@
           <v-list-item-content>
             <v-list-item-title>
               <span>
-                <div :style="{ height: '15px', padding: '1px', fontSize: '10px' }">{{ $t('Lat & Long') }}</div> 
-                <div :style="{ fontSize: '7px' }">{{ '(' + $store.state.currentLocation.lat + ', ' + $store.state.currentLocation.lng + ')' }}</div> 
+                <div :style="{ fontSize: '10px' }">{{ $store.state.currentLocation.short_name }}</div>
               </span>
             </v-list-item-title>
           </v-list-item-content>
         </v-list-item>
 
-        <v-list-item @click.stop="ShowConfirmDialog('Confirm', $t('Are you sure you need to refresh?'), 'Refresh')" :style="{ height: '36px' }">
+        <v-list-item @click.stop="ShowConfirmDialog('Confirm', 'Are you sure you need to refresh?', 'Refresh')" :style="{ height: '36px' }">
           <v-list-item-icon style="margin-right: 10px;">
             <div style="display: flex; justify-content: center; align-items: center;">
               <img :src="require(`@/assets/images/svg/ui/Refresh.svg`)" height="30px" style="min-height: 30px"></img>
@@ -411,7 +409,7 @@ export default {
       networkDisconnected: false, // 添加网络连接状态
 
       QTClientVersion: 'Not connected',
-      VueClientVersion: '20250115',
+      VueClientVersion: '20250107',
 
       // isMessageBoxShow: false,
 
@@ -437,14 +435,7 @@ export default {
 
       // Changing the label name also requires changing the emit signal name
       GuiderConfigItems: [
-        { driverType: 'Guider', label: 'Guider Focal Length (mm)', value: '', inputType: 'text'},
-        { driverType: 'Guider', label: 'Multi Star Guider', value: false, inputType: 'switch'},
-        // { driverType: 'Guider', label: 'Guider Pixel size', value: '', inputType: 'text'},
-        { driverType: 'Guider', label: 'Guider Gain', value: '', inputType: 'slider', inputMin: 0, inputMax: 100, inputStep: 1},
-        { driverType: 'Guider', label: 'Calibration step (ms)', value: '', inputType: 'text'},
-        { driverType: 'Guider', label: 'Ra Aggression', value: '', inputType: 'slider', inputMin: 0, inputMax: 100, inputStep: 1},
-        { driverType: 'Guider', label: 'Dec Aggression', value: '', inputType: 'slider', inputMin: 0, inputMax: 100, inputStep: 1},
-
+      { driverType: 'Guider', label: 'Guider Focal Length (mm)', value: '', inputType: 'text'},
       ],
 
       MainCameraConfigItems: [
@@ -481,7 +472,6 @@ export default {
       FocuserConfigItems: [
         // { driverType: 'Focuser', num: 1, label: 'RedBox Side Length (px)', value: '', inputType: 'text'},
         { driverType: 'Focuser', num: 2, label: 'Min Step', value: '', inputType: 'text' },
-        { driverType: 'Focuser', num: 2, label: 'Sync Focuser Step', value: '', inputType: 'text' },
         
       ],
 
@@ -604,13 +594,6 @@ export default {
     this.$bus.$on('Temperature', this.CameraTemperatureSet);
     this.$bus.$on('Focal Length (mm)', this.FocalLengthSet);
     this.$bus.$on('Guider Focal Length (mm)', this.GuiderFocalLengthSet);
-    this.$bus.$on('Multi Star Guider', this.MultiStarGuiderSet);
-    this.$bus.$on('Guider Pixel size', this.GuiderPixelSizeSet);
-    this.$bus.$on('Guider Gain', this.GuiderGainSet);
-    this.$bus.$on('Calibration step (ms)', this.CalibrationDurationSet);
-    this.$bus.$on('Ra Aggression', this.RaAggressionSet);
-    this.$bus.$on('Dec Aggression', this.DecAggressionSet);
-    this.$bus.$on('Sync Focuser Step', this.SyncFocuserStep);
     this.$bus.$on('ImageProportion', this.setImageProportion);
     this.$bus.$on('MountGoto',this.lookatcircle);
     this.$bus.$on('SwitchImageToShow', this.SwitchImageToShow);
@@ -656,7 +639,7 @@ export default {
         const data = JSON.parse(message.data);
 
         if (data.type === 'QT_Return') {
-          // 从服务端返回的驱动列表
+          // console.log('QHYCCD | QT_Return');
           if (data.message.startsWith('AddDriver:')) {
             const parts = data.message.split(':');
             if (parts.length === 3) {
@@ -665,12 +648,11 @@ export default {
               const type = this.CurrentDriverType;
               // 创建一个驱动对象
               const driver = { type, label, value };
-              // this.$bus.$emit('add-driver', driver);
+              this.$bus.$emit('add-driver', driver);
               this.drivers.push(driver);
             }
           }
 
-          // 服务端扫描到新的设备
           if (data.message.startsWith('AddDevice:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -681,7 +663,7 @@ export default {
               // 创建一个驱动对象
               const device = { type, label, label };
               console.log('QHYCCD | AddDevice: ',device);
-              // this.$bus.$emit('add-device', device);
+              this.$bus.$emit('add-device', device);
               this.devicesList.push(device);
 
               this.ToBeConnectDevice = [];
@@ -695,7 +677,6 @@ export default {
             }
           }
 
-          // 更新当前所连接的设备
           if (data.message.startsWith('updateDevices_:')) {
             const parts = data.message.split(':');
             if (parts.length === 3) {
@@ -705,7 +686,6 @@ export default {
             }
           }
 
-          // 有设备成功连接
           if (data.message.startsWith('ConnectSuccess:')) {
             const parts = data.message.split(':');
             if (parts.length === 3) {
@@ -715,7 +695,6 @@ export default {
             }
           }
 
-          // 有设备连接失败
           if (data.message.startsWith('ConnectFailed:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -725,7 +704,6 @@ export default {
             }
           }
 
-          // 设备扫描失败
           if (data.message.startsWith('ScanFailed:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -735,7 +713,6 @@ export default {
             }
           }
 
-          // 新连接设备的类型
           if (data.message.startsWith('AddDeviceType:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -744,7 +721,6 @@ export default {
             }
           }
 
-          // 有设备需要分配（有多个相机的时候，需要用户分配哪个相机做主相机，哪个相机做导星相机）
           if (data.message.startsWith('DeviceToBeAllocated:')) {
             const parts = data.message.split(':');
             if (parts.length === 4) {
@@ -755,18 +731,15 @@ export default {
             }
           }
 
-          // 显示设备分配面板
           if (data.message.startsWith('ShowDeviceAllocationWindow')) {
             this.$bus.$emit('toggleDeviceAllocationPanel');
             this.nav = false;
           }
 
-          // 主相机曝光完成
           if (data.message.startsWith('ExposureCompleted')) {
             this.$bus.$emit('ExposureCompleted');
           }
 
-          // 拍摄的图像成功保存为JPG图（带图像文件地址）
           if (data.message.startsWith('SaveJpgSuccess:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -775,7 +748,6 @@ export default {
             }
           }
 
-          // 拍摄的图像成功保存为PNG图（带图像文件地址）
           if (data.message.startsWith('SavePngSuccess:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -788,7 +760,6 @@ export default {
             }
           }
 
-          // 拍摄的图像成功保存为Bin文件（带图像文件地址）
           if (data.message.startsWith('SaveBinSuccess:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -801,7 +772,6 @@ export default {
             }
           }
 
-          // 导星相机拍摄的图像成功保存（带图像文件地址）
           if (data.message.startsWith('SaveGuiderImageSuccess:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -813,7 +783,6 @@ export default {
             }
           }
 
-          // 有新的导星数据(散点图)
           if (data.message.startsWith('AddScatterChartData:')) {
             const parts = data.message.split(':');
             if (parts.length === 3) {
@@ -824,7 +793,6 @@ export default {
             }
           }
 
-          // 有新的导星数据(折线图)
           if (data.message.startsWith('AddLineChartData:')) {
             const parts = data.message.split(':');
             if (parts.length === 4) {
@@ -838,7 +806,6 @@ export default {
             }
           }
 
-          // 导星数据的y轴范围
           if (data.message.startsWith('SetLineChartRange:')) {
             const parts = data.message.split(':');
             if (parts.length === 3) {
@@ -848,7 +815,6 @@ export default {
             }
           }
 
-          // 导星的状态
           if (data.message.startsWith('GuiderStatus:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -857,7 +823,6 @@ export default {
             }
           }
 
-          // 电调速度修改成功后的值
           if (data.message.startsWith('FocusChangeSpeedSuccess:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -866,7 +831,6 @@ export default {
             }
           }
 
-          // 电调的位置
           if (data.message.startsWith('FocusPosition:')) {
             const parts = data.message.split(':');
             if (parts.length === 3) {
@@ -876,7 +840,6 @@ export default {
             }
           }
 
-          // 电调移动完成(带星点半高宽值)
           if (data.message.startsWith('FocusMoveDone:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -886,7 +849,6 @@ export default {
             this.$bus.$emit('FocusMoveDone');
           }
 
-          // 主相机的分辨率
           if (data.message.startsWith('MainCameraSize:')) {
             const parts = data.message.split(':');
             if (parts.length === 3) {
@@ -898,7 +860,6 @@ export default {
             }
           }
 
-          // 主相机拍摄的Bin
           if (data.message.startsWith('MainCameraBinning:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -907,7 +868,6 @@ export default {
             }
           }
 
-          // 调焦曲线拟合
           if (data.message.startsWith('fitQuadraticCurve:')) {
             this.$bus.$emit('ClearfitQuadraticCurve');
             const parts = data.message.split(':');
@@ -922,7 +882,6 @@ export default {
             }
           }
 
-          // 调焦曲线的最小值
           if (data.message.startsWith('fitQuadraticCurve_minPoint:')) {
             const parts = data.message.split(':');
 
@@ -932,7 +891,6 @@ export default {
             this.$bus.$emit('fitQuadraticCurve_minPoint', x, y);
           }
           
-          // 赤道仪的Park状态
           if (data.message.startsWith('TelescopePark:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -941,7 +899,6 @@ export default {
             }
           }
 
-          // 赤道仪的跟踪状态
           if (data.message.startsWith('TelescopeTrack:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -958,7 +915,6 @@ export default {
           //   }
           // }
 
-          // 修改赤道仪转动速度成功后的值
           if (data.message.startsWith('MountSetSpeedSuccess:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -967,7 +923,6 @@ export default {
             }
           }
 
-          // 赤道仪的指向
           if (data.message.startsWith('TelescopePierSide:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -976,7 +931,6 @@ export default {
             }
           }
 
-          // 更新计划任务表的进度
           if (data.message.startsWith('UpdateScheduleProcess:')) {
             const parts = data.message.split(':');
             if (parts.length === 3) {
@@ -986,7 +940,6 @@ export default {
             }
           }
 
-          // 恢复计划任务表中的数据
           if (data.message.startsWith('StagingScheduleData:')) {
             console.log('------------------------------');
             const parts = data.message.split('[');
@@ -998,7 +951,6 @@ export default {
             console.log('------------------------------');
           }
 
-          // 主相机的曝光时间选项列表
           if (data.message.startsWith('ExpTimeList:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -1006,17 +958,14 @@ export default {
             }
           }
 
-          // 主相机正在曝光
           if (data.message.startsWith('CameraInExposuring:')) {
             this.$bus.$emit('CameraInExposuring');
           }
 
-          // 电调自动调焦结束
           if (data.message.startsWith('AutoFocusOver:')) {
             this.$bus.$emit('AutoFocusOver');
           }
 
-          // 滤镜轮的档数
           if (data.message.startsWith('CFWPositionMax:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -1030,7 +979,6 @@ export default {
             }
           }
 
-          // 滤镜轮旋转完成以及滤镜轮当前位置
           if (data.message.startsWith('SetCFWPositionSuccess:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -1038,7 +986,6 @@ export default {
             }
           }
 
-          // 获取滤镜轮的挡位选项列表
           if (data.message.startsWith('getCFWList:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -1046,7 +993,6 @@ export default {
             }
           }
 
-          // 导星开关按钮的状态
           if (data.message.startsWith('GuiderSwitchStatus:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -1054,7 +1000,6 @@ export default {
             }
           }
 
-          // 导星循环拍摄按钮的状态
           if (data.message.startsWith('GuiderLoopExpStatus:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -1062,7 +1007,6 @@ export default {
             }
           }
 
-          // 赤道仪的RaDec值
           if (data.message.startsWith('TelescopeRADEC:')) {
             const parts = data.message.split(':');
             if (parts.length === 3) {
@@ -1070,7 +1014,6 @@ export default {
             }
           }
 
-          // 赤道仪的状态
           if (data.message.startsWith('TelescopeStatus:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -1078,7 +1021,6 @@ export default {
             }
           }
 
-          // 主相机的状态
           if (data.message.startsWith('MainCameraStatus:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -1086,7 +1028,6 @@ export default {
             }
           }
 
-          // 主相机的温度
           if (data.message.startsWith('MainCameraTemperature:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -1094,7 +1035,6 @@ export default {
             }
           }
 
-          // 保存的图像文件夹所有文件夹名称
           if (data.message.startsWith('ShowAllImageFolder:')) {
             const parts = data.message.split(':');
             if (parts.length === 3) {
@@ -1102,7 +1042,6 @@ export default {
             }
           }
 
-          // 图像文件的名称
           if (data.message.startsWith('ImageFilesName|')) {
             const parts = data.message.split('|');
             if (parts.length === 2) {
@@ -1110,7 +1049,6 @@ export default {
             }
           }
 
-          // 检测的USB设备信息
           if (data.message.startsWith('USBCheck:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -1124,7 +1062,6 @@ export default {
             }
           }
           
-          // 图像保存失败以及原因
           if (data.message.startsWith('ImageSaveErroe:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -1137,7 +1074,6 @@ export default {
             }
           }
 
-          // 星点检测的结果
           if (data.message.startsWith('DetectedStars:')) {
             // this.$bus.$emit('ClearfitQuadraticCurve');
             const parts = data.message.split(':');
@@ -1158,7 +1094,6 @@ export default {
             this.DetectedStarsFinish = true;
           }
 
-          // 拍摄图像解析的结果
           if (data.message.startsWith('SolveImageResult:')) {
             const parts = data.message.split(':');
             if (parts.length === 5) {
@@ -1170,7 +1105,6 @@ export default {
             }
           }
 
-          // 图像解析的视场信息结果
           if (data.message.startsWith('SolveFovResult:')) {
             const parts = data.message.split(':');
             if (parts.length === 9) {
@@ -1186,7 +1120,6 @@ export default {
             }
           }
 
-          // 实时拍摄解析的结果（循环拍摄解析）
           if (data.message.startsWith('RealTimeSolveImageResult:')) {
             const parts = data.message.split(':');
             if (parts.length === 5) {
@@ -1201,22 +1134,20 @@ export default {
             }
           }
 
-          // 图像解析失败以及原因
           if (data.message.startsWith('SolveImageFaild')) {
             this.callShowMessageBox('Solve image faild...','error');
             this.$bus.$emit("ImageSolveFinished", false);
           }
 
-          // if (data.message.startsWith('SetCurrentLocation')) {
-          //   const parts = data.message.split(':');
-          //   if (parts.length === 3) {
-          //     this.$bus.$emit('SetCurrentLocation',parts[1], parts[2]);
-          //     this.CurrentLocationLat = parts[1];
-          //     this.CurrentLocationLng = parts[2];
-          //   }
-          // }
+          if (data.message.startsWith('SetCurrentLocation')) {
+            const parts = data.message.split(':');
+            if (parts.length === 3) {
+              this.$bus.$emit('SetCurrentLocation',parts[1], parts[2]);
+              this.CurrentLocationLat = parts[1];
+              this.CurrentLocationLng = parts[2];
+            }
+          }
 
-          // 主相机的Offset能够设置的范围
           if (data.message.startsWith('MainCameraOffsetRange:')) {
             const parts = data.message.split(':');
             if (parts.length === 3) {
@@ -1234,7 +1165,6 @@ export default {
             }
           }
 
-          // 主相机的Gain能够设置的范围
           if (data.message.startsWith('MainCameraGainRange:')) {
             const parts = data.message.split(':');
             if (parts.length === 3) {
@@ -1252,7 +1182,6 @@ export default {
             }
           }
 
-          // 蓝盒子输出电源的状态
           if (data.message.startsWith('OutPutPowerStatus:')) {
             const parts = data.message.split(':');
             if (parts.length === 3) {
@@ -1267,7 +1196,6 @@ export default {
             }
           }
 
-          // PHD2中的星点选取框是否显示
           if (data.message.startsWith('PHD2StarBoxView:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -1276,7 +1204,6 @@ export default {
             }
           }
 
-          // PHD2的星点选取十字线是否显示
           if (data.message.startsWith('PHD2StarCrossView:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -1285,7 +1212,6 @@ export default {
             }
           }
 
-          // PHD2的星点选取框的位置
           if (data.message.startsWith('PHD2StarBoxPosition:')) {
             const parts = data.message.split(':');
             if (parts.length === 5) {
@@ -1297,24 +1223,6 @@ export default {
             }
           }
 
-          // PHD2的多星导星的星点位置
-          if (data.message.startsWith('PHD2MultiStarsPosition:')) {
-            const parts = data.message.split(':');
-            if (parts.length === 5) {
-              const PHD2ImageSize_X = parseInt(parts[1], 10);
-              const PHD2ImageSize_Y = parseInt(parts[2], 10);
-              const Box_X = parseInt(parts[3], 10);
-              const Box_Y = parseInt(parts[4], 10);
-              this.DrawPHD2MultiStars(PHD2ImageSize_X, PHD2ImageSize_Y, Box_X, Box_Y);
-            }
-          }
-
-          // 清除PHD2的多星导星数据
-          if (data.message.startsWith('ClearPHD2MultiStars')) {
-            this.$bus.$emit('ClearPHD2MultiStars');
-          }
-
-          // PHD2的星点选取十字线的位置
           if (data.message.startsWith('PHD2StarCrossPosition:')) {
             const parts = data.message.split(':');
             if (parts.length === 5) {
@@ -1326,7 +1234,6 @@ export default {
             }
           }
 
-          // QT客户端的版本号
           if (data.message.startsWith('QTClientVersion:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -1334,7 +1241,6 @@ export default {
             }
           }
 
-          // 主相机拍摄的图像保存状态
           if (data.message.startsWith('CaptureImageSaveStatus:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -1349,7 +1255,6 @@ export default {
             }
           }
 
-          // INDI Server的日志输出
           if (data.message.startsWith('INDIServerDebug|')) {
             const parts = data.message.split('|');
             if (parts.length === 2) {
@@ -1358,7 +1263,6 @@ export default {
             }
           }
 
-          // QT客户端的日志输出
           if (data.message.startsWith('SendDebugMessage|')) {
             const parts = data.message.split('|');
             if (parts.length === 3) {
@@ -1368,7 +1272,6 @@ export default {
             }
           }
 
-          // 树莓派的热点名字
           if (data.message.startsWith('HotspotName:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -1377,12 +1280,10 @@ export default {
             }
           }
 
-          // 树莓派热点名称修改成功
           if (data.message.startsWith('EditHotspotNameSuccess')) {
             this.$bus.$emit('EditHotspotNameSuccess');
           }
 
-          // 单反相机的名字
           if (data.message.startsWith('DSLRsSetup:')) {
             const parts = data.message.split(':');
             if (parts.length === 2) {
@@ -1391,7 +1292,6 @@ export default {
             }
           }
 
-          // 配置选项的恢复
           if (data.message.startsWith('ConfigureRecovery:')) {
             const parts = data.message.split(':');
             if (parts.length === 3) {
@@ -1408,41 +1308,6 @@ export default {
               if(parts[1] === 'GuiderFocalLength') {
                 this.GuiderConfigItems[0].value = parts[2];
                 this.$bus.$emit('AppSendMessage', 'Vue_Command', 'GuiderFocalLength:'+ parts[2]);
-              }
-
-              if(parts[1] === 'Coordinates') {
-                const [lat, lng] = parts[2].split(',').map(coord => parseFloat(coord.trim()));
-                this.SetCurrentLocation(lat, lng);
-              }
-
-              if(parts[1] === 'MultiStarGuider') {
-                this.GuiderConfigItems[1].value = (parts[2] === 'true');
-                this.$bus.$emit('AppSendMessage', 'Vue_Command', 'MultiStarGuider:'+ parts[2]);
-              }
-
-              // if(parts[1] === 'GuiderPixelSize') {
-              //   this.GuiderConfigItems[2].value = parts[2];
-              //   this.$bus.$emit('AppSendMessage', 'Vue_Command', 'GuiderPixelSize:'+ parts[2]);
-              // }
-
-              if(parts[1] === 'GuiderGain') {
-                this.GuiderConfigItems[2].value = parts[2];
-                this.$bus.$emit('AppSendMessage', 'Vue_Command', 'GuiderGain:'+ parts[2]);
-              }
-
-              if(parts[1] === 'CalibrationDuration') {
-                this.GuiderConfigItems[3].value = parts[2];
-                this.$bus.$emit('AppSendMessage', 'Vue_Command', 'CalibrationDuration:'+ parts[2]);
-              }
-
-              if(parts[1] === 'RaAggression') {
-                this.GuiderConfigItems[4].value = parts[2];
-                this.$bus.$emit('AppSendMessage', 'Vue_Command', 'RaAggression:'+ parts[2]);
-              }
-
-              if(parts[1] === 'DecAggression') {
-                this.GuiderConfigItems[5].value = parts[2];
-                this.$bus.$emit('AppSendMessage', 'Vue_Command', 'DecAggression:'+ parts[2]);
               }
             }
           }
@@ -1540,30 +1405,6 @@ export default {
 
     locationClicked: function () {
       this.$store.commit('toggleBool', 'showLocationDialog');
-
-      this.$bus.$emit('ResetTime');
-    },
-
-    SetCurrentLocation(lat, lng) {
-      console.log('SetCurrentLocation:', lat, ',', lng);
-      this.$bus.$emit('SendConsoleLogMsg', 'Set Current Location:' + lat + ',' + lng, 'info');
-      this.$bus.$emit('PolarPointAltitude', lat);
-      const loc = {
-        short_name: 'Unknown',
-        country: 'Unknown',
-        lng: lng,
-        lat: lat,
-        alt: 0, 
-        accuracy: 0, 
-        street_address: ''
-      }
-      this.$store.commit('setCurrentLocation', loc); 
-
-      this.$bus.$emit('ShowPositionInfo', lat, lng);
-
-      setTimeout(() => {
-        this.$bus.$emit('ResetTime');
-      }, 1000);
     },
 
     StatusRecovery() {
@@ -1581,6 +1422,14 @@ export default {
       this.isOpenPowerPage = true;
 
       this.drawer_2 = true;
+    },
+
+    Reboot() {
+      
+    },
+
+    PowerOFF() {
+      
     },
 
     QuitToMainApp() {
@@ -1709,12 +1558,6 @@ export default {
       } else if (type === 'CFW') {
         this.$bus.$emit('CFWConnected', 1);
         console.log('Mount is Connected.');
-      } else if (type === 'Focuser') {
-        this.$bus.$emit('FocuserConnected', 1);
-        console.log('Focuser is Connected.');
-      } else if (type === 'Guider') {
-        this.$bus.$emit('GuiderConnected', 1);
-        console.log('Guider is Connected.');
       }
 
       this.$bus.$emit('DeviceConnectSuccess', type, newDevice);
@@ -1796,8 +1639,6 @@ export default {
           this.$bus.$emit('MainCameraConnected', 0);
           this.$bus.$emit('MountConnected', 0);
           this.$bus.$emit('CFWConnected', 0);
-          this.$bus.$emit('FocuserConnected', 0);
-          this.$bus.$emit('GuiderConnected', 0);
           this.claerDeviceList();
         }
       } else {
@@ -1841,16 +1682,6 @@ export default {
         this.$bus.$emit('AppSendMessage', 'Vue_Command', 'SwitchOutPutPower:' + index);
         this.SendConsoleLogMsg('Switch OutPutPower' + index, 'info');
       }
-    },
-
-    RestartRaspberryPi() {
-      this.drawer_2 = false;
-      this.ShowConfirmDialog('Restart', 'Are you sure you want to restart the Raspberry Pi?', 'RestartRaspberryPi');
-    },
-
-    ShutdownRaspberryPi() {
-      this.drawer_2 = false;
-      this.ShowConfirmDialog('Shut Down', 'Are you sure you want to shut down the Raspberry Pi?', 'ShutdownRaspberryPi');
     },
 
     ReturnConnectedDevices() {
@@ -1950,7 +1781,7 @@ export default {
     confirmConfiguration(List) {
       List.forEach(item => {
         if (item.value !== '') {
-          // console.log(item.label, item.value);
+          console.log(item.label, item.value);
           this.SendConsoleLogMsg(item.label + ':' + item.value, 'info');
           this.$bus.$emit(item.label, item.label + ':' + item.value);
         }
@@ -2080,65 +1911,43 @@ export default {
       const [signal, value] = payload.split(':'); // 拆分信号和值
       const IntValue = parseInt(value); // 将值转换为 Int 类型
 
-      // console.log('Guider Focal Length is set to:', IntValue);
+      console.log('Guider Focal Length is set to:', IntValue);
       this.SendConsoleLogMsg('Guider Focal Length is set to:' + IntValue, 'info');
       this.$bus.$emit('AppSendMessage', 'Vue_Command', 'GuiderFocalLength:'+ IntValue);
       this.$bus.$emit('AppSendMessage', 'Vue_Command', 'saveToConfigFile:GuiderFocalLength:'+ IntValue);
     },
 
-    MultiStarGuiderSet(payload) {
-      const [signal, value] = payload.split(':'); // 拆分信号和值
-      this.SendConsoleLogMsg('Multi Star Guider is set to:' + value, 'info');
-      this.$bus.$emit('AppSendMessage', 'Vue_Command', 'MultiStarGuider:'+ value);
-      this.$bus.$emit('AppSendMessage', 'Vue_Command', 'saveToConfigFile:MultiStarGuider:'+ value);
-    },
+    // async readBinFile(fileName) {
+    //   console.log('CaptureTestTime | Read image data start.');
+    //   const startTime = new Date();
 
-    GuiderPixelSizeSet(payload) {
-      const [signal, value] = payload.split(':'); // 拆分信号和值
-      const doubleValue = parseFloat(value);
-      this.SendConsoleLogMsg('Guider Pixel size is set to:' + doubleValue, 'info');
-      this.$bus.$emit('AppSendMessage', 'Vue_Command', 'GuiderPixelSize:'+ doubleValue);
-      this.$bus.$emit('AppSendMessage', 'Vue_Command', 'saveToConfigFile:GuiderPixelSize:'+ doubleValue);
-    },
+    //   try {
+    //     const response = await fetch(fileName);
+    //     if (!response.ok) {
+    //       throw new Error('Network response was not ok');
+    //     }
 
-    GuiderGainSet(payload) {
-      const [signal, value] = payload.split(':'); // 拆分信号和值
-      const IntValue = parseInt(value);
-      this.SendConsoleLogMsg('Guider Gain is set to:' + IntValue, 'info');
-      this.$bus.$emit('AppSendMessage', 'Vue_Command', 'GuiderGain:'+ IntValue);
-      this.$bus.$emit('AppSendMessage', 'Vue_Command', 'saveToConfigFile:GuiderGain:'+ IntValue);
-    },
+    //     const blob = await response.blob();
 
-    CalibrationDurationSet(payload) {
-      const [signal, value] = payload.split(':'); // 拆分信号和值
-      const IntValue = parseInt(value);
-      this.SendConsoleLogMsg('Guider Calibration step is set to:' + IntValue, 'info');
-      this.$bus.$emit('AppSendMessage', 'Vue_Command', 'CalibrationDuration:'+ IntValue);
-      this.$bus.$emit('AppSendMessage', 'Vue_Command', 'saveToConfigFile:CalibrationDuration:'+ IntValue);
-    },
+    //     const fileReader = new FileReader();
+    //     fileReader.onload = () => {
+    //       const arrayBuffer = fileReader.result;
 
-    RaAggressionSet(payload) {
-      const [signal, value] = payload.split(':'); // 拆分信号和值
-      const IntValue = parseInt(value);
-      this.SendConsoleLogMsg('Ra Aggression is set to:' + IntValue, 'info');
-      this.$bus.$emit('AppSendMessage', 'Vue_Command', 'RaAggression:'+ IntValue);
-      this.$bus.$emit('AppSendMessage', 'Vue_Command', 'saveToConfigFile:RaAggression:'+ IntValue);
-    },
+    //       const endTime = new Date();
+    //       const elapsedTime = endTime.getTime() - startTime.getTime();
+    //       console.log('CaptureTestTime | Read image data end:', elapsedTime, 'milliseconds');
+    //       this.callShowMessageBox(`Read image data end: '${elapsedTime}' milliseconds.`,'msg');
 
-    DecAggressionSet(payload) {
-      const [signal, value] = payload.split(':'); // 拆分信号和值
-      const IntValue = parseInt(value);
-      this.SendConsoleLogMsg('Dec Aggression is set to:' + IntValue, 'info');
-      this.$bus.$emit('AppSendMessage', 'Vue_Command', 'DecAggression:'+ IntValue);
-      this.$bus.$emit('AppSendMessage', 'Vue_Command', 'saveToConfigFile:DecAggression:'+ IntValue);
-    },
-
-    SyncFocuserStep(payload) {
-      const [signal, value] = payload.split(':'); // 拆分信号和值
-      const IntValue = parseInt(value);
-      this.SendConsoleLogMsg('Sync Focuser Step:' + IntValue, 'info');
-      this.$bus.$emit('AppSendMessage', 'Vue_Command', 'SyncFocuserStep:'+ IntValue);
-    },
+    //       this.processImage(arrayBuffer);
+    //     };
+    //     fileReader.onerror = (error) => {
+    //       console.error('FileReader error:', error);
+    //     };
+    //     fileReader.readAsArrayBuffer(blob);
+    //   } catch (error) {
+    //     console.error('There was a problem with the fetch operation:', error);
+    //   }
+    // },
 
     async readBinFile(fileName) {
       console.log('CaptureTestTime | Read image data start.');
@@ -2200,7 +2009,6 @@ export default {
           this.SendConsoleLogMsg('CaptureTestTime | Read image data end:' + elapsedTime + 'milliseconds', 'info');
           if (!this.isPolarAxisMode) {
             this.callShowMessageBox(`Read image data end: '${elapsedTime}' milliseconds.`, 'info');
-            // this.callShowMessageBox($t('Read image data end: {0} milliseconds.', [elapsedTime]), 'info');
           }
 
           this.processImage(this.ImageArrayBuffer);
@@ -2775,16 +2583,6 @@ export default {
       const CrossStartY = Cross_Y / ratioZoomY;
 
       this.$bus.$emit('PHD2CrossPosition', CrossStartX, CrossStartY);
-    },
-
-    DrawPHD2MultiStars(PHD2ImageSize_X, PHD2ImageSize_Y, Star_X, Star_Y) {
-      const ratioZoomX = PHD2ImageSize_X / window.innerWidth;
-      const ratioZoomY = PHD2ImageSize_Y / window.innerHeight;
-
-      const StarStartX = Star_X / ratioZoomX - 12 / 2;
-      const StarStartY = Star_Y / ratioZoomY - 12 / 2;
-
-      this.$bus.$emit('PHD2MultiStarsPosition', StarStartX, StarStartY);
     },
 
     GetAutoStretch(imgData, mode) {
@@ -3842,6 +3640,10 @@ export default {
       // window.location.reload();
       this.nav = false;
       this.$bus.$emit('ShowConfirmDialog', Title, Text, ToDo);
+    },
+
+    GetCurrentLocation() {
+      this.$bus.$emit('AppSendMessage', 'Vue_Command', 'getCurrentLocation');
     },
 
     decrement(item) {
